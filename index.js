@@ -37,12 +37,30 @@ async function run() {
 
         // All Apis are here 
 
+        // Products API
+
+        app.get('/products', async (req, res) => {
+            const query = {};
+
+            const cursor = productsCollection.find(query).limit(6);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.post('/products', async (req, res) => {
             const product = req.body;
             const result = await productsCollection.insertOne(product);
             res.send(result);
         })
 
+        // All Products API
+        app.get('/all-products', async (req, res) => {
+            const query = {};
+
+            const cursor = productsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
