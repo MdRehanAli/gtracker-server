@@ -34,6 +34,7 @@ async function run() {
 
         const db = client.db("gTrackerDB");
         const productsCollection = db.collection('products')
+        const orderCollection = db.collection('order')
 
         // All Apis are here 
 
@@ -74,6 +75,27 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result);
+        })
+
+        // Order API 
+        app.get('/order', async (req, res) => {
+            const query = {};
+
+            const { email } = req.query;
+            if (email) {
+                query.email = email;
+            }
+
+            const cursor = orderCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+
+            const result = await orderCollection.insertOne(order);
+            res.send(result)
         })
 
         // Send a ping to confirm a successful connection
