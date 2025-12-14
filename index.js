@@ -118,7 +118,7 @@ async function run() {
         // Payment Related API 
         app.post('/create-checkout-session', async (req, res) => {
             const paymentInfo = req.body;
-            const amount = parseInt(paymentInfo.orderPrice) * 100;
+            const amount = parseFloat(paymentInfo.orderPrice) * 100;
 
             const session = await stripe.checkout.sessions.create({
                 line_items: [
