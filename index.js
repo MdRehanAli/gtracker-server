@@ -86,8 +86,9 @@ async function run() {
             if (email) {
                 query.email = email;
             }
+            const options = { sort: { createdAt: -1 } }
 
-            const cursor = orderCollection.find(query);
+            const cursor = orderCollection.find(query, options);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -103,6 +104,9 @@ async function run() {
         app.post('/order', async (req, res) => {
             const order = req.body;
 
+            // Order Created Time 
+            order.createdAt = new Date();
+
             const result = await orderCollection.insertOne(order);
             res.send(result)
         })
@@ -116,19 +120,18 @@ async function run() {
         })
 
         // Payment Related API 
-        app.post('/create-checkout-session', async (req, res) => {
+        app.post('/payment-checkout-session', async (req, res) => {
             const paymentInfo = req.body;
             const amount = parseFloat(paymentInfo.orderPrice) * 100;
 
             const session = await stripe.checkout.sessions.create({
                 line_items: [
                     {
-                        // Provide the exact Price ID (for example, price_1234) of the product you want to sell
                         price_data: {
                             currency: 'USD',
                             unit_amount: amount,
                             product_data: {
-                                name: paymentInfo.productTitle
+                                name: `Please Pay for ${paymentInfo.productTitle}`
                             }
                         },
                         quantity: 1,
@@ -139,13 +142,34 @@ async function run() {
                 metadata: {
                     orderId: paymentInfo.orderId,
                 },
-                success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success`,
+                success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payment-cancelled`,
             });
 
             console.log(session);
             res.send({ url: session.url });
         });
+
+        app.patch('/payment-success', async (req, res) => {
+            const sessionId = req.query.session_id;
+
+            const session = await stripe.checkout.sessions.retrieve(sessionId);
+            console.log('Session Retrieve:', session);
+            if (session.payment_status === 'paid') {
+                const id = session.metadata.orderId;
+                const query = { _id: new ObjectId(id) }
+                const update = {
+                    $set: {
+                        payment_status: 'paid'
+                    }
+                }
+
+                const result = await orderCollection.updateOne(query, update);
+                res.send(result);
+            }
+
+            res.send({ success: false });
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
