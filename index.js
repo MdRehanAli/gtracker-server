@@ -81,6 +81,20 @@ async function run() {
         const paymentCollection = db.collection('payments');
         const userCollection = db.collection('users');
 
+        // Middleware with database Access 
+        const verifyAdmin = async (req, res, next) => {
+
+            const email = req.decoded_email;
+            const query = {email};
+            const user = await userCollection.findOne(query);
+
+            if(!user || user.role !== 'admin'){
+                return res.status(401).send({message: 'forbidden access'})
+            }
+
+            next();
+        }
+
 
         // All Apis are here 
         // Users related Api
@@ -149,6 +163,17 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/users/:id', async (req, res) => {
+
+        })
+
+        app.get('/users/:email/role', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await userCollection.findOne(query);
+            res.send({ role: user?.role || 'user' })
+        })
+
         app.post('/users', async (req, res) => {
             const user = req.body;
 
@@ -166,7 +191,7 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/users/:id', verifyFBToken, async (req, res) => {
+        app.patch('/users/:id/role', verifyFBToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const roleInfo = req.body
             const query = { _id: new ObjectId(id) };
