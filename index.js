@@ -85,11 +85,11 @@ async function run() {
         const verifyAdmin = async (req, res, next) => {
 
             const email = req.decoded_email;
-            const query = {email};
+            const query = { email };
             const user = await userCollection.findOne(query);
 
-            if(!user || user.role !== 'admin'){
-                return res.status(401).send({message: 'forbidden access'})
+            if (!user || user.role !== 'admin') {
+                return res.status(401).send({ message: 'forbidden access' })
             }
 
             next();
@@ -158,7 +158,18 @@ async function run() {
 
         app.get('/users', verifyFBToken, async (req, res) => {
 
-            const cursor = userCollection.find();
+            const searchText = req.query.searchText;
+            const query = {
+            }
+
+            if (searchText) {
+                query.$or = [
+                    { displayName: { $regex: searchText, $options: 'i' } },
+                    { email: { $regex: searchText, $options: 'i' } }
+                ]
+            }
+
+            const cursor = userCollection.find(query).sort({ createdAt: -1 }).limit(5);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -178,6 +189,7 @@ async function run() {
             const user = req.body;
 
             user.role = 'user';
+            user.status = 'pending';
             user.createdAt = new Date();
 
             const email = user.email;
@@ -250,10 +262,14 @@ async function run() {
         app.get('/order', async (req, res) => {
             const query = {};
 
-            const { email } = req.query;
+            const { email, status } = req.query;
             if (email) {
                 query.email = email;
             }
+            if (status) {
+                query.status = status;
+            }
+
             const options = { sort: { createdAt: -1 } }
 
             const cursor = orderCollection.find(query, options);
@@ -274,9 +290,24 @@ async function run() {
 
             // Order Created Time 
             order.createdAt = new Date();
+            order.status = 'pending';
 
             const result = await orderCollection.insertOne(order);
             res.send(result)
+        })
+
+        app.patch('/order/:id', verifyFBToken, verifyAdmin, async (req, res) => {
+            const status = req.body.status;
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    status: status
+                }
+            }
+            const result = await orderCollection.updateOne(query, updateDoc);
+            res.send(result);
         })
 
         app.delete('/order/:id', async (req, res) => {
@@ -348,6 +379,7 @@ async function run() {
                 const update = {
                     $set: {
                         payment_status: 'paid',
+                        status: 'pending',
                         trackingId: trackingId
                     }
                 }
