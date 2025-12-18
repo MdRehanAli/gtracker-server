@@ -188,7 +188,6 @@ async function run() {
         app.post('/users', async (req, res) => {
             const user = req.body;
 
-            user.role = 'user';
             user.status = 'pending';
             user.createdAt = new Date();
 
