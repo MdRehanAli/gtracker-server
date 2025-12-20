@@ -1,3 +1,4 @@
 node_modules
 .env
 gtracker24-firebase-adminsdk.json
+.vercel

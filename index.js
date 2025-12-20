@@ -7,9 +7,12 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET);
 
 const crypto = require("crypto");
 
-var admin = require("firebase-admin");
+const admin = require("firebase-admin");
 
-var serviceAccount = require("./gtracker24-firebase-adminsdk.json");
+// const serviceAccount = require("./gtracker24-firebase-adminsdk.json");
+
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -73,7 +76,7 @@ app.get('/', (req, res) => {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const db = client.db("gTrackerDB");
         const productsCollection = db.collection('products');
@@ -89,6 +92,19 @@ async function run() {
             const user = await userCollection.findOne(query);
 
             if (!user || user.role !== 'admin') {
+                return res.status(401).send({ message: 'forbidden access' })
+            }
+
+            next();
+        }
+
+        const verifyManager = async (req, res, next) => {
+
+            const email = req.decoded_email;
+            const query = { email };
+            const user = await userCollection.findOne(query);
+
+            if (!user || user.role !== 'manager') {
                 return res.status(401).send({ message: 'forbidden access' })
             }
 
@@ -397,13 +413,14 @@ async function run() {
                     trackingId: trackingId
                 }
 
-                if (session.payment_status === 'paid') {
+                
                     const resultPayment = await paymentCollection.insertOne(paymentHistory);
-                    res.send({ success: true, trackingId: trackingId, transactionId: session.payment_intent, modifyParcel: result, paymentInfo: resultPayment })
-                }
+                    
+                    return res.send({ success: true, trackingId: trackingId, transactionId: session.payment_intent, modifyParcel: result, paymentInfo: resultPayment })
+                
             }
 
-            res.send({ success: false });
+            return res.send({ success: false });
         })
 
 
@@ -428,9 +445,9 @@ async function run() {
             res.send(result);
         })
 
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // // Send a ping to confirm a successful connection
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
