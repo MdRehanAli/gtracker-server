@@ -111,67 +111,6 @@ async function run() {
             next();
         }
 
-
-        // All Apis are here 
-        // Users related Api
-        // app.get('/users', async (req, res) => {
-        //     const query = {}
-        //     if (req.query.status) {
-        //         query.status = req.query.status;
-        //     }
-        //     const cursor = userCollection.find(query);
-        //     const result = await cursor.toArray();
-        //     res.send(result);
-        // })
-
-        // app.post('/users', async (req, res) => {
-        //     const user = req.body;
-
-        //     user.role = 'user';
-        //     user.status = 'pending';
-        //     user.createdAt = new Date();
-
-        //     const email = user.email;
-        //     const userExists = await userCollection.findOne({ email })
-
-        //     if (userExists) {
-        //         return res.send({ message: "User Exists." })
-        //     }
-
-        //     const result = await userCollection.insertOne(user);
-        //     res.send(result);
-        // })
-
-        // app.patch('/users/:id', verifyFBToken, async (req, res) => {
-        //     const status = req.body.status;
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-
-        //     const updateDoc = {
-        //         $set: {
-        //             status: status
-        //         }
-        //     }
-
-        //     const result = await userCollection.updateOne(query, updateDoc);
-
-        //     if (status === 'approved') {
-        //         const email = req.body.email;
-        //         const userQuery = { email }
-
-        //         const updateUser = {
-        //             $set: {
-        //                 role: 'manager'
-        //             }
-        //         }
-
-        //         const userResult = await userCollection.updateOne(userQuery, updateUser);
-
-        //     }
-
-        //     res.send(result);
-        // })
-
         app.get('/users', verifyFBToken, async (req, res) => {
 
             const searchText = req.query.searchText;
