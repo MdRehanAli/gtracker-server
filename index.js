@@ -261,6 +261,13 @@ async function run() {
         app.get('/all-products', async (req, res) => {
             const query = {};
 
+            const { email } = req.query;
+            if (email) {
+                query.email = email;
+            }
+
+            const options = { sort: { createdAt: -1 } }
+
             const cursor = productsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
@@ -270,6 +277,14 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await productsCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.post('/all-products', async (req, res) => {
+            const product = req.body;
+            product.createdAt = new Date();
+            product.showHome = false;
+            const result = await productsCollection.insertOne(product);
             res.send(result);
         })
 
@@ -413,11 +428,11 @@ async function run() {
                     trackingId: trackingId
                 }
 
-                
-                    const resultPayment = await paymentCollection.insertOne(paymentHistory);
-                    
-                    return res.send({ success: true, trackingId: trackingId, transactionId: session.payment_intent, modifyParcel: result, paymentInfo: resultPayment })
-                
+
+                const resultPayment = await paymentCollection.insertOne(paymentHistory);
+
+                return res.send({ success: true, trackingId: trackingId, transactionId: session.payment_intent, modifyParcel: result, paymentInfo: resultPayment })
+
             }
 
             return res.send({ success: false });
