@@ -296,7 +296,6 @@ async function run() {
             const updateDoc = {
                 $set: {
                     name: productInfo.name,
-                    image: productInfo.image,
                     largeDescription: productInfo.largeDescription,
                     category: productInfo.category,
                     price: productInfo.price,
@@ -307,7 +306,7 @@ async function run() {
                 }
             }
 
-            const result = await userCollection.updateOne(query, updateDoc);
+            const result = await productsCollection.updateOne(query, updateDoc);
             res.send(result);
         })
 
