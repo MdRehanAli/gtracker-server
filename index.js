@@ -288,6 +288,37 @@ async function run() {
             res.send(result);
         })
 
+        app.patch('/all-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const productInfo = req.body
+            const query = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    name: productInfo.name,
+                    image: productInfo.image,
+                    largeDescription: productInfo.largeDescription,
+                    category: productInfo.category,
+                    price: productInfo.price,
+                    availableQuantity: productInfo.availableQuantity,
+                    minimumOrder: productInfo.minimumOrder,
+                    video: productInfo.video,
+                    paymentOptions: productInfo.paymentOptions
+                }
+            }
+
+            const result = await userCollection.updateOne(query, updateDoc);
+            res.send(result);
+        })
+
+        app.delete('/all-products/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const query = { _id: new ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // Order API 
         app.get('/order', async (req, res) => {
             const query = {};
