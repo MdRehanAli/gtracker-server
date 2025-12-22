@@ -302,7 +302,10 @@ async function run() {
                     availableQuantity: productInfo.availableQuantity,
                     minimumOrder: productInfo.minimumOrder,
                     video: productInfo.video,
-                    paymentOptions: productInfo.paymentOptions
+                    paymentOptions: productInfo.paymentOptions,
+                    creator: productInfo.photoURL,
+                    creatorEmail: productInfo.email,
+                    createdBy: productInfo.displayName
                 }
             }
 
