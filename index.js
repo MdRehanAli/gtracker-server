@@ -198,11 +198,19 @@ async function run() {
 
         // All Products API
         app.get('/all-products', async (req, res) => {
+            const searchText = req.query.searchText;
             const query = {};
 
             const { email } = req.query;
             if (email) {
                 query.email = email;
+            }
+
+            if (searchText) {
+                query.$or = [
+                    { name: { $regex: searchText, $options: 'i' } },
+                    { category: { $regex: searchText, $options: 'i' } }
+                ]
             }
 
             const options = { sort: { createdAt: -1 } }
